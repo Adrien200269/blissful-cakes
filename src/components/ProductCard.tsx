@@ -42,7 +42,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           {product.description}
         </CardDescription>
         <div className="text-2xl font-bold text-pink-600">
-          ${product.price.toFixed(2)}
+          Rs {Math.round(product.price)}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">

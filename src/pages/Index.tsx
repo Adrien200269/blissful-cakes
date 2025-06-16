@@ -11,6 +11,7 @@ import { Cart } from '@/components/Cart';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -84,7 +85,25 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-pink-600">🧁 Blissful Cake Haven</h1>
+              <img 
+                src="/lovable-uploads/9d3d417e-75ad-4e57-999f-fc0e4ca2def0.png" 
+                alt="Blissful Cakes" 
+                className="h-12 w-12 object-contain"
+              />
+              <nav className="hidden md:flex space-x-6">
+                <Link 
+                  to="/" 
+                  className="text-gray-700 hover:text-pink-600 font-medium"
+                >
+                  Home
+                </Link>
+                <Link 
+                  to="/about" 
+                  className="text-gray-700 hover:text-pink-600 font-medium"
+                >
+                  About Us
+                </Link>
+              </nav>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -119,6 +138,12 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Blissful Cakes</h1>
+          <p className="text-lg text-gray-600">Your premier destination for delicious and beautifully crafted cakes</p>
+        </div>
+
         {/* Search and Filters */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">

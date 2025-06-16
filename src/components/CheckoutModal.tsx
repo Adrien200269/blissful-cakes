@@ -9,6 +9,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { AuthModal } from './AuthModal';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -16,18 +17,28 @@ interface CheckoutModalProps {
 }
 
 export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleCheckout = async () => {
-    if (!user) return;
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    phone: '',
+    address: '',
+    notes: ''
+  });
+
+  const totalPrice = getTotalPrice();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -36,11 +47,10 @@ export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
         .from('orders')
         .insert({
           user_id: user.id,
-          total_amount: getTotalPrice(),
-          delivery_address: deliveryAddress,
-          phone: phone,
-          notes: notes,
-          status: 'pending'
+          total_amount: totalPrice,
+          delivery_address: formData.address,
+          phone: formData.phone,
+          notes: formData.notes,
         })
         .select()
         .single();
@@ -52,7 +62,7 @@ export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
         order_id: order.id,
         product_id: item.id,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
       }));
 
       const { error: itemsError } = await supabase
@@ -63,15 +73,18 @@ export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
 
       toast({
         title: 'Order Placed Successfully!',
-        description: 'Your delicious treats are on their way!',
+        description: 'Your order has been received and will be processed soon.',
       });
 
       clearCart();
       onClose();
-    } catch (error: any) {
+      setFormData({ phone: '', address: '', notes: '' });
+      
+    } catch (error) {
+      console.error('Order error:', error);
       toast({
         title: 'Order Failed',
-        description: error.message || 'Something went wrong. Please try again.',
+        description: 'There was an error placing your order. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -80,61 +93,85 @@ export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Checkout</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="delivery-address">Delivery Address *</Label>
-            <Textarea
-              id="delivery-address"
-              value={deliveryAddress}
-              onChange={(e) => setDeliveryAddress(e.target.value)}
-              placeholder="Enter your full delivery address"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number *</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter your phone number"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">Special Instructions (optional)</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any special requests or notes for your order"
-            />
-          </div>
-          
-          <div className="border-t pt-4">
-            <div className="flex justify-between items-center text-lg font-bold mb-4">
-              <span>Total: ${getTotalPrice().toFixed(2)}</span>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Checkout</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Order Summary */}
+            <div className="space-y-2">
+              <h3 className="font-medium">Order Summary</h3>
+              <div className="text-sm text-gray-600 space-y-1">
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between">
+                    <span>{item.name} × {item.quantity}</span>
+                    <span>Rs {Math.round(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+                <div className="border-t pt-1 font-medium flex justify-between">
+                  <span>Total:</span>
+                  <span>Rs {Math.round(totalPrice)}</span>
+                </div>
+              </div>
             </div>
-            
-            <Button
-              onClick={handleCheckout}
-              disabled={loading || !deliveryAddress || !phone}
-              className="w-full bg-pink-500 hover:bg-pink-600"
-            >
-              {loading ? 'Placing Order...' : 'Place Order'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+            {/* Contact Information */}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                required
+              />
+            </div>
+
+            {/* Delivery Address */}
+            <div className="space-y-2">
+              <Label htmlFor="address">Delivery Address</Label>
+              <Textarea
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                required
+              />
+            </div>
+
+            {/* Special Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Special Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Any special instructions for your order..."
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="flex-1 bg-pink-500 hover:bg-pink-600"
+              >
+                {loading ? 'Placing Order...' : 'Place Order'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
+    </>
   );
 };
