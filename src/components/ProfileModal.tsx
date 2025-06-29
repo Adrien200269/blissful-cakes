@@ -66,8 +66,8 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
       setProfile({
         full_name: data.full_name || '',
         phone: data.phone || '',
-        location: data.location || '',
-        avatar_url: data.avatar_url || ''
+        location: (data as any).location || '',
+        avatar_url: (data as any).avatar_url || ''
       });
     }
   };
