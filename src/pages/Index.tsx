@@ -1,14 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, LogOut } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Search, User, LogOut, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductCard } from '@/components/ProductCard';
 import { Cart } from '@/components/Cart';
 import { AuthModal } from '@/components/AuthModal';
+import { ProfileModal } from '@/components/ProfileModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
@@ -17,9 +18,25 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
+
+  // Fetch user profile for avatar
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+  });
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -111,10 +128,24 @@ const Index = () => {
               
               {user ? (
                 <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-2 px-3 py-2 bg-pink-50 rounded-lg">
-                    <User className="w-4 h-4" />
-                    <span className="text-sm font-medium">{user.email}</span>
+                  <div className="flex items-center space-x-3 px-3 py-2 bg-pink-50 rounded-lg">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={userProfile?.avatar_url} alt="Profile" />
+                      <AvatarFallback>
+                        {userProfile?.full_name ? userProfile.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">
+                      {userProfile?.full_name || user.email}
+                    </span>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowProfileModal(true)}
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -204,6 +235,7 @@ const Index = () => {
       </main>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
 };
