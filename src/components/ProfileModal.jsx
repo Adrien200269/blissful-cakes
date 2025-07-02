@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,20 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Camera, Eye, EyeOff, User, Phone, MapPin, Lock, CheckCircle, Star, Heart, Sparkles } from 'lucide-react';
 
-interface ProfileModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-interface UserProfile {
-  full_name: string;
-  phone: string;
-  location: string;
-  avatar_url: string;
-}
-
-export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
-  const [profile, setProfile] = useState<UserProfile>({
+export const ProfileModal = ({ isOpen, onClose }) => {
+  const [profile, setProfile] = useState({
     full_name: '',
     phone: '',
     location: '',
@@ -66,13 +53,13 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
       setProfile({
         full_name: data.full_name || '',
         phone: data.phone || '',
-        location: (data as any).location || '',
-        avatar_url: (data as any).avatar_url || ''
+        location: data.location || '',
+        avatar_url: data.avatar_url || ''
       });
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   
@@ -131,7 +130,7 @@ const Index = () => {
                 <div className="flex items-center space-x-2">
                   <div className="flex items-center space-x-3 px-3 py-2 bg-pink-50 rounded-lg">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={(userProfile as any)?.avatar_url} alt="Profile" />
+                      <AvatarImage src={userProfile?.avatar_url} alt="Profile" />
                       <AvatarFallback>
                         {userProfile?.full_name ? userProfile.full_name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>

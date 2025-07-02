@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,12 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthModal } from './AuthModal';
 
-interface CheckoutModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
+export const CheckoutModal = ({ isOpen, onClose }) => {
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -31,7 +25,7 @@ export const CheckoutModal = ({ isOpen, onClose }: CheckoutModalProps) => {
 
   const totalPrice = getTotalPrice();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!user) {
