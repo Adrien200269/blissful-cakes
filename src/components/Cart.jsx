@@ -13,23 +13,28 @@ export const Cart = () => {
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
 
+  console.log('Cart items:', items, 'Total items:', totalItems);
+
   return (
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="relative group overflow-hidden bg-gradient-to-r from-pink-50 to-purple-50 hover:from-pink-100 hover:to-purple-100 border-pink-200 hover:border-pink-300 transition-all duration-300 hover:scale-105 hover:shadow-lg">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="relative group overflow-hidden bg-gradient-to-r from-pink-50 to-purple-50 hover:from-pink-100 hover:to-purple-100 border-pink-200 hover:border-pink-300 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+          >
             {/* Animated background glow */}
             <div className="absolute inset-0 bg-gradient-to-r from-pink-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
             
             <ShoppingCart className="w-4 h-4 text-pink-600 group-hover:text-pink-700 transition-colors duration-200 group-hover:animate-bounce" />
+            <span className="ml-2 text-pink-600 group-hover:text-pink-700">Cart</span>
             
             {totalItems > 0 && (
               <>
-                <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-gradient-to-r from-pink-500 to-purple-500 text-white border-2 border-white animate-pulse shadow-lg">
+                <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-gradient-to-r from-pink-500 to-purple-500 text-white border-2 border-white animate-pulse shadow-lg">
                   {totalItems}
                 </Badge>
-                {/* Ripple effect */}
-                <div className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-pink-400 animate-ping opacity-30"></div>
               </>
             )}
           </Button>

@@ -7,8 +7,13 @@ export const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
+    console.log('Adding to cart:', product);
     addToCart(product);
   };
+
+  if (!product) {
+    return null;
+  }
 
   return (
     <Card className="h-full flex flex-col group animate-fade-in hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
@@ -18,6 +23,9 @@ export const ProductCard = ({ product }) => {
             src={product.image_url || '/placeholder.svg'}
             alt={product.name}
             className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:rotate-2"
+            onError={(e) => {
+              e.target.src = '/placeholder.svg';
+            }}
           />
           {/* Animated overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -43,7 +51,7 @@ export const ProductCard = ({ product }) => {
         <Button
           onClick={handleAddToCart}
           disabled={!product.is_available}
-          className="w-full bg-pink-500 hover:bg-pink-600 transform hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          className="w-full bg-pink-500 hover:bg-pink-600 transform hover:scale-105 transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="w-4 h-4 mr-2 animate-bounce-subtle" />
           {product.is_available ? 'Add to Cart' : 'Out of Stock'}

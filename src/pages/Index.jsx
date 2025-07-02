@@ -23,6 +23,9 @@ const Index = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
+  console.log('Current user:', user);
+  console.log('Auth loading:', authLoading);
+
   // Fetch user profile for avatar
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile', user?.id],
@@ -82,6 +85,11 @@ const Index = () => {
       title: 'Signed Out',
       description: 'You have been signed out successfully.',
     });
+  };
+
+  const handleAuthClick = () => {
+    console.log('Auth button clicked');
+    setShowAuthModal(true);
   };
 
   if (authLoading) {
@@ -156,7 +164,7 @@ const Index = () => {
                 </div>
               ) : (
                 <Button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={handleAuthClick}
                   className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-pulse-gentle"
                 >
                   <User className="w-4 h-4 mr-2" />
@@ -262,7 +270,13 @@ const Index = () => {
         </div>
       </main>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => {
+          console.log('Closing auth modal');
+          setShowAuthModal(false);
+        }} 
+      />
       <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
