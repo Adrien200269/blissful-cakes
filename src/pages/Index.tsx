@@ -169,10 +169,28 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
+        {/* Hero Section with Animated Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Blissful Cakes</h1>
-          <p className="text-lg text-gray-600">Your premier destination for delicious and beautifully crafted cakes</p>
+          <div className="relative">
+            {/* Decorative elements */}
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full animate-fade-in opacity-0 animation-delay-500"></div>
+            
+            <h1 className="font-playfair text-5xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-pink-500 bg-clip-text text-transparent animate-fade-in opacity-0 animation-delay-200 mb-6">
+              Welcome to Blissful Cakes
+            </h1>
+            
+            {/* Animated underline */}
+            <div className="w-32 h-1 bg-gradient-to-r from-pink-400 to-purple-400 mx-auto rounded-full animate-scale-in opacity-0 animation-delay-700 mb-6"></div>
+            
+            <p className="text-lg md:text-xl text-gray-600 font-inter animate-fade-in opacity-0 animation-delay-1000 max-w-2xl mx-auto">
+              Your premier destination for delicious and beautifully crafted cakes
+            </p>
+
+            {/* Floating decorative elements */}
+            <div className="absolute top-0 left-1/4 w-3 h-3 bg-pink-300 rounded-full animate-float opacity-60 animation-delay-1500"></div>
+            <div className="absolute top-8 right-1/4 w-2 h-2 bg-purple-300 rounded-full animate-float-delayed opacity-60 animation-delay-2000"></div>
+            <div className="absolute -bottom-4 left-1/3 w-4 h-4 bg-pink-200 rounded-full animate-float opacity-40 animation-delay-2500"></div>
+          </div>
         </div>
 
         {/* Search and Filters */}
