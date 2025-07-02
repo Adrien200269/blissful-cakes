@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -157,8 +158,9 @@ const Index = () => {
               ) : (
                 <Button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-pink-500 hover:bg-pink-600"
+                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-pulse-gentle"
                 >
+                  <User className="w-4 h-4 mr-2" />
                   Sign In
                 </Button>
               )}
