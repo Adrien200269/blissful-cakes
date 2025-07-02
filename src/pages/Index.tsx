@@ -234,19 +234,28 @@ const Index = () => {
           {productsLoading ? (
             Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
-                <div className="bg-gray-200 h-4 rounded mb-2"></div>
-                <div className="bg-gray-200 h-3 rounded mb-2"></div>
-                <div className="bg-gray-200 h-6 rounded"></div>
+                <div className="bg-gray-200 aspect-square rounded-lg mb-4 animate-pulse"></div>
+                <div className="bg-gray-200 h-4 rounded mb-2 animate-pulse"></div>
+                <div className="bg-gray-200 h-3 rounded mb-2 animate-pulse"></div>
+                <div className="bg-gray-200 h-6 rounded animate-pulse"></div>
               </div>
             ))
           ) : products.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
+              <p className="text-gray-500 text-lg animate-fade-in">No products found matching your criteria.</p>
             </div>
           ) : (
-            products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            products.map((product, index) => (
+              <div
+                key={product.id}
+                className="animate-fade-in opacity-0"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animationFillMode: 'forwards'
+                }}
+              >
+                <ProductCard product={product} />
+              </div>
             ))
           )}
         </div>
