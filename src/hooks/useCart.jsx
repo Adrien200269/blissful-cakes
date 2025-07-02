@@ -9,18 +9,35 @@ export const CartProvider = ({ children }) => {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setItems(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem('blissful-cakes-cart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        if (Array.isArray(parsedCart)) {
+          setItems(parsedCart);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error);
+      localStorage.removeItem('blissful-cakes-cart');
     }
   }, []);
 
   // Save cart to localStorage whenever items change
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
+    try {
+      localStorage.setItem('blissful-cakes-cart', JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error);
+    }
   }, [items]);
 
   const addToCart = (product) => {
+    if (!product || !product.id) {
+      console.error('Invalid product:', product);
+      return;
+    }
+
     setItems(currentItems => {
       const existingItem = currentItems.find(item => item.id === product.id);
       
@@ -45,11 +62,33 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = (productId) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== productId));
+    if (!productId) {
+      console.error('Invalid product ID:', productId);
+      return;
+    }
+
+    setItems(currentItems => {
+      const filteredItems = currentItems.filter(item => item.id !== productId);
+      const removedItem = currentItems.find(item => item.id === productId);
+      
+      if (removedItem) {
+        toast({
+          title: 'Removed from Cart',
+          description: `${removedItem.name} removed from your cart`,
+        });
+      }
+      
+      return filteredItems;
+    });
   };
 
   const updateQuantity = (productId, quantity) => {
-    if (quantity <= 0) {
+    if (!productId || quantity < 0) {
+      console.error('Invalid parameters:', { productId, quantity });
+      return;
+    }
+
+    if (quantity === 0) {
       removeFromCart(productId);
       return;
     }
@@ -63,14 +102,25 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => {
     setItems([]);
+    toast({
+      title: 'Cart Cleared',
+      description: 'All items removed from your cart',
+    });
   };
 
   const getTotalPrice = () => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return items.reduce((total, item) => {
+      const price = parseFloat(item.price) || 0;
+      const quantity = parseInt(item.quantity) || 0;
+      return total + (price * quantity);
+    }, 0);
   };
 
   const getTotalItems = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
+    return items.reduce((total, item) => {
+      const quantity = parseInt(item.quantity) || 0;
+      return total + quantity;
+    }, 0);
   };
 
   return (

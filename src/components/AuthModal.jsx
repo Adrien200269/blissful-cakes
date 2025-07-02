@@ -20,42 +20,95 @@ export const AuthModal = ({ isOpen, onClose }) => {
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please enter both email and password.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signIn(email, password);
-    if (error) {
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast({
+          title: 'Sign In Error',
+          description: error.message || 'Failed to sign in. Please check your credentials.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully signed in.',
+        });
+        resetForm();
+        onClose();
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
       toast({
         title: 'Sign In Error',
-        description: error.message,
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully signed in.',
-      });
-      onClose();
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleSignUp = async () => {
-    setLoading(true);
-    const { error } = await signUp(email, password, fullName);
-    if (error) {
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !password || !fullName) {
       toast({
-        title: 'Sign Up Error',
-        description: error.message,
+        title: 'Missing Information',
+        description: 'Please fill in all fields.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Account Created!',
-        description: 'Please check your email to verify your account.',
-      });
-      onClose();
+      return;
     }
-    setLoading(false);
+
+    if (password.length < 6) {
+      toast({
+        title: 'Password Too Short',
+        description: 'Password must be at least 6 characters long.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await signUp(email, password, fullName);
+      if (error) {
+        toast({
+          title: 'Sign Up Error',
+          description: error.message || 'Failed to create account. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Account Created!',
+          description: 'Your account has been created successfully. You can now sign in.',
+        });
+        resetForm();
+        onClose();
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast({
+        title: 'Sign Up Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = async () => {
@@ -69,24 +122,34 @@ export const AuthModal = ({ isOpen, onClose }) => {
     }
 
     setResetLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/`,
-    });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`,
+      });
 
-    if (error) {
+      if (error) {
+        toast({
+          title: 'Reset Password Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Password Reset Email Sent',
+          description: 'Please check your email for password reset instructions.',
+        });
+        setShowForgotPassword(false);
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
       toast({
         title: 'Reset Password Error',
-        description: error.message,
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Password Reset Email Sent',
-        description: 'Please check your email for password reset instructions.',
-      });
-      setShowForgotPassword(false);
+    } finally {
+      setResetLoading(false);
     }
-    setResetLoading(false);
   };
 
   const resetForm = () => {
@@ -186,7 +249,7 @@ export const AuthModal = ({ isOpen, onClose }) => {
             </TabsList>
             
             <TabsContent value="signin" className="space-y-6 animate-fade-in">
-              <div className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email" className="text-gray-700 font-medium">Email</Label>
                   <div className="relative">
@@ -198,6 +261,7 @@ export const AuthModal = ({ isOpen, onClose }) => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       className="pl-10 border-2 border-pink-200 focus:border-pink-400 transition-colors duration-300"
+                      required
                     />
                   </div>
                 </div>
@@ -212,6 +276,7 @@ export const AuthModal = ({ isOpen, onClose }) => {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       className="pl-10 pr-10 border-2 border-pink-200 focus:border-pink-400 transition-colors duration-300"
+                      required
                     />
                     <button
                       type="button"
@@ -222,39 +287,39 @@ export const AuthModal = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="text-right">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-pink-600 hover:text-pink-800 underline transition-colors duration-200"
+                
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-pink-600 hover:text-pink-800 underline transition-colors duration-200"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                
+                <Button 
+                  type="submit"
+                  disabled={loading} 
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 >
-                  Forgot Password?
-                </button>
-              </div>
-              
-              <Button 
-                onClick={handleSignIn} 
-                disabled={loading} 
-                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Signing In...
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Sign In
-                  </>
-                )}
-              </Button>
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Signing In...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Sign In
+                    </>
+                  )}
+                </Button>
+              </form>
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-6 animate-fade-in">
-              <div className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name" className="text-gray-700 font-medium">Full Name</Label>
                   <div className="relative">
@@ -265,6 +330,7 @@ export const AuthModal = ({ isOpen, onClose }) => {
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Enter your full name"
                       className="pl-10 border-2 border-pink-200 focus:border-pink-400 transition-colors duration-300"
+                      required
                     />
                   </div>
                 </div>
@@ -279,6 +345,7 @@ export const AuthModal = ({ isOpen, onClose }) => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       className="pl-10 border-2 border-pink-200 focus:border-pink-400 transition-colors duration-300"
+                      required
                     />
                   </div>
                 </div>
@@ -291,8 +358,10 @@ export const AuthModal = ({ isOpen, onClose }) => {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a password"
+                      placeholder="Create a password (min 6 characters)"
                       className="pl-10 pr-10 border-2 border-pink-200 focus:border-pink-400 transition-colors duration-300"
+                      required
+                      minLength={6}
                     />
                     <button
                       type="button"
@@ -303,25 +372,25 @@ export const AuthModal = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                 </div>
-              </div>
-              
-              <Button 
-                onClick={handleSignUp} 
-                disabled={loading} 
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Creating Account...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Create Account
-                  </>
-                )}
-              </Button>
+                
+                <Button 
+                  type="submit"
+                  disabled={loading} 
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Create Account
+                    </>
+                  )}
+                </Button>
+              </form>
             </TabsContent>
           </Tabs>
         )}
