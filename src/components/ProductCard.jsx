@@ -1,14 +1,30 @@
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Check } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useState } from 'react';
 
 export const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     console.log('Adding to cart:', product);
-    addToCart(product);
+    setIsAdding(true);
+    
+    // Simulate a brief loading state for better UX
+    setTimeout(() => {
+      addToCart(product);
+      setIsAdding(false);
+      setJustAdded(true);
+      
+      // Reset the "just added" state after animation
+      setTimeout(() => {
+        setJustAdded(false);
+      }, 2000);
+    }, 300);
   };
 
   if (!product) {
@@ -50,11 +66,51 @@ export const ProductCard = ({ product }) => {
       <CardFooter className="p-4 pt-0">
         <Button
           onClick={handleAddToCart}
-          disabled={!product.is_available}
-          className="w-full bg-pink-500 hover:bg-pink-600 transform hover:scale-105 transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!product.is_available || isAdding}
+          className={`
+            w-full relative overflow-hidden group/btn
+            transition-all duration-300 transform
+            ${justAdded 
+              ? 'bg-green-500 hover:bg-green-600 scale-105' 
+              : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
+            }
+            ${isAdding ? 'animate-pulse scale-95' : 'hover:scale-105'}
+            hover:shadow-2xl hover:shadow-pink-500/25
+            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+            before:absolute before:inset-0 
+            before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
+            before:translate-x-[-100%] before:skew-x-12
+            hover:before:translate-x-[100%] before:transition-transform before:duration-700
+            active:scale-95 active:shadow-inner
+          `}
         >
-          <ShoppingCart className="w-4 h-4 mr-2 animate-bounce-subtle" />
-          {product.is_available ? 'Add to Cart' : 'Out of Stock'}
+          {/* Ripple effect container */}
+          <span className="absolute inset-0 overflow-hidden rounded-md">
+            <span className="absolute inset-0 bg-white/10 scale-0 rounded-full transition-transform duration-300 group-hover/btn:scale-150 group-active/btn:scale-100"></span>
+          </span>
+          
+          {/* Button content */}
+          <span className="relative flex items-center justify-center gap-2 z-10">
+            {isAdding ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Adding...
+              </>
+            ) : justAdded ? (
+              <>
+                <Check className="w-4 h-4 animate-bounce" />
+                Added!
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4 transition-transform duration-200 group-hover/btn:rotate-12 group-hover/btn:scale-110" />
+                {product.is_available ? 'Add to Cart' : 'Out of Stock'}
+              </>
+            )}
+          </span>
+          
+          {/* Animated border */}
+          <span className="absolute inset-0 rounded-md border-2 border-transparent group-hover/btn:border-white/30 transition-colors duration-300"></span>
         </Button>
       </CardFooter>
     </Card>
