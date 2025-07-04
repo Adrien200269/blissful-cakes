@@ -145,6 +145,10 @@
     animation: bounce-gentle 2s ease-in-out infinite;
   }
 
+  .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+  }
+
   @keyframes pulse-subtle {
     0%, 100% {
       opacity: 1;
@@ -193,5 +197,34 @@
     90% {
       transform: translate3d(0, -1px, 0);
     }
+  }
+
+  /* Logo specific animations */
+  @keyframes logo-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.3));
+    }
+    50% {
+      filter: drop-shadow(0 0 30px rgba(147, 51, 234, 0.4));
+    }
+  }
+
+  .animate-logo-glow {
+    animation: logo-glow 3s ease-in-out infinite;
+  }
+
+  /* Text gradient animation */
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
   }
 }
