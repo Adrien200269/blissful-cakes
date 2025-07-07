@@ -1,17 +1,391 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blissful Cakes</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/animations.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content auth-modal-content">
+            <button class="modal-close" id="auth-modal-close">&times;</button>
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <span class="sparkles">✨</span>
+                </div>
+                <h2 class="auth-title">Welcome to Blissful Cake Haven</h2>
+                <p class="auth-subtitle">Your sweet journey begins here</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="signin">Sign In</button>
+                <button class="auth-tab" data-tab="signup">Sign Up</button>
+            </div>
+            
+            <div class="auth-content">
+                <!-- Sign In Form -->
+                <div id="signin-form" class="auth-form active">
+                    <div class="form-group">
+                        <label for="signin-email">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📧</span>
+                            <input type="email" id="signin-email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signin-password">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="signin-password" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" data-target="signin-password">👁️</button>
+                        </div>
+                    </div>
+                    <div class="forgot-password">
+                        <button type="button" id="forgot-password-btn">Forgot Password?</button>
+                    </div>
+                    <button type="submit" class="auth-submit" id="signin-submit">
+                        <span class="submit-icon">🔒</span>
+                        Sign In
+                    </button>
+                </div>
+                
+                <!-- Sign Up Form -->
+                <div id="signup-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="signup-name">Full Name</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="signup-name" placeholder="Enter your full name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📧</span>
+                            <input type="email" id="signup-email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="signup-password" placeholder="Create a password" required>
+                            <button type="button" class="password-toggle" data-target="signup-password">👁️</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit" id="signup-submit">
+                        <span class="submit-icon">✨</span>
+                        Create Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content profile-modal-content">
+            <button class="modal-close" id="profile-modal-close">&times;</button>
+            <div class="profile-header">
+                <h2 class="profile-title">Your Beautiful Profile</h2>
+                <p class="profile-subtitle">Customize your personal space with style ✨</p>
+            </div>
+            
+            <div class="profile-content">
+                <div class="avatar-section">
+                    <div class="avatar-container">
+                        <div class="avatar" id="profile-avatar">
+                            <span id="avatar-fallback">U</span>
+                        </div>
+                        <label for="avatar-upload" class="avatar-upload-btn">
+                            📷
+                            <input type="file" id="avatar-upload" accept="image/*" hidden>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="profile-form">
+                    <div class="form-section">
+                        <h3>Personal Details</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="profile-name">Full Name</label>
+                                <input type="text" id="profile-name" placeholder="Enter your beautiful name">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-phone">Phone Number</label>
+                                <input type="tel" id="profile-phone" placeholder="Your contact number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-location">Location</label>
+                            <input type="text" id="profile-location" placeholder="Where are you located?">
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Security & Privacy</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="new-password">New Password</label>
+                                <input type="password" id="new-password" placeholder="Create a strong password">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-password">Confirm New Password</label>
+                                <input type="password" id="confirm-password" placeholder="Confirm your password">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button type="button" class="btn-primary" id="save-profile">
+                            <span>✨</span>
+                            Save My Beautiful Profile
+                        </button>
+                        <button type="button" class="btn-secondary" id="cancel-profile">
+                            Maybe Later
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="sidebar hidden">
+        <div class="sidebar-overlay"></div>
+        <div class="sidebar-content">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">
+                    <span class="sparkles">✨</span>
+                    Shopping Cart (<span id="cart-count">0</span> items)
+                </h3>
+                <button class="sidebar-close" id="cart-close">&times;</button>
+            </div>
+            
+            <div class="sidebar-body">
+                <div id="cart-items" class="cart-items">
+                    <div class="empty-cart">
+                        <div class="empty-cart-icon">🛒</div>
+                        <p>Your cart is empty</p>
+                        <small>Add some delicious cakes to get started!</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="cart-footer" class="sidebar-footer hidden">
+                <div class="cart-total">
+                    <div class="total-row">
+                        <span>Total:</span>
+                        <div class="total-amount">
+                            <div class="total-price">Rs <span id="cart-total">0</span></div>
+                            <div class="total-note">Including all items</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary checkout-btn" id="checkout-btn">
+                    <span>✨</span>
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="checkout-modal-close">&times;</button>
+            <h2>Checkout</h2>
+            
+            <div class="checkout-content">
+                <div class="order-summary">
+                    <h3>Order Summary</h3>
+                    <div id="checkout-items" class="checkout-items"></div>
+                    <div class="checkout-total">
+                        <strong>Total: Rs <span id="checkout-total">0</span></strong>
+                    </div>
+                </div>
+                
+                <form id="checkout-form" class="checkout-form">
+                    <div class="form-group">
+                        <label for="checkout-phone">Phone Number</label>
+                        <input type="tel" id="checkout-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkout-address">Delivery Address</label>
+                        <textarea id="checkout-address" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkout-notes">Special Notes (Optional)</label>
+                        <textarea id="checkout-notes" placeholder="Any special instructions for your order..."></textarea>
+                    </div>
+                    
+                    <div class="checkout-actions">
+                        <button type="button" class="btn-secondary" id="cancel-checkout">Cancel</button>
+                        <button type="submit" class="btn-primary">Place Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main App -->
+    <div id="app" class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <img src="/public/lovable-uploads/9d3d417e-75ad-4e57-999f-fc0e4ca2def0.png" alt="Blissful Cakes" class="logo">
+                    <nav class="nav">
+                        <a href="#" class="nav-link active" data-page="home">Home</a>
+                        <a href="#" class="nav-link" data-page="about">About Us</a>
+                    </nav>
+                </div>
+                
+                <div class="header-right">
+                    <button class="cart-btn" id="cart-btn">
+                        <span class="cart-icon">🛒</span>
+                        <span class="cart-badge hidden" id="cart-badge">0</span>
+                    </button>
+                    
+                    <div id="user-menu" class="user-menu hidden">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <span id="user-avatar-text">U</span>
+                            </div>
+                            <span id="user-name" class="user-name">User</span>
+                        </div>
+                        <button class="icon-btn" id="profile-btn" title="Profile">⚙️</button>
+                        <button class="icon-btn" id="logout-btn" title="Logout">🚪</button>
+                    </div>
+                    
+                    <button id="signin-btn" class="btn-primary signin-btn">
+                        <span>👤</span>
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Home Page -->
+            <div id="home-page" class="page active">
+                <!-- Hero Section -->
+                <section class="hero">
+                    <div class="hero-content">
+                        <div class="hero-decorations">
+                            <div class="decoration decoration-1"></div>
+                            <div class="decoration decoration-2"></div>
+                            <div class="decoration decoration-3"></div>
+                        </div>
+                        
+                        <h1 class="hero-title">Welcome to Blissful Cakes</h1>
+                        <div class="hero-underline"></div>
+                        <p class="hero-subtitle">Your premier destination for delicious and beautifully crafted cakes</p>
+                    </div>
+                </section>
+
+                <!-- Search and Filters -->
+                <section class="search-section">
+                    <div class="search-container">
+                        <div class="search-bar">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="search-input" placeholder="Search for cakes, cupcakes, and more...">
+                        </div>
+                    </div>
+                    
+                    <div class="category-filters">
+                        <button class="category-btn active" data-category="">All Items</button>
+                    </div>
+                </section>
+
+                <!-- Products Grid -->
+                <section class="products-section">
+                    <div id="products-grid" class="products-grid">
+                        <!-- Products will be loaded here -->
+                    </div>
+                    
+                    <div id="products-loading" class="products-loading hidden">
+                        <div class="loading-grid">
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                            <div class="product-skeleton"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="no-products" class="no-products hidden">
+                        <p>No products found matching your criteria.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- About Page -->
+            <div id="about-page" class="page">
+                <div class="about-container">
+                    <div class="about-content">
+                        <div class="about-text">
+                            <h1 class="about-title">About Us</h1>
+                            
+                            <div class="about-paragraphs">
+                                <p>Welcome to Blissful Cakes Pokhara, your premier destination for delicious and beautifully crafted cakes in the heart of Pokhara! Established with a deep passion for baking and creativity, we take pride in offering a wide variety of delectable treats tailored to suit every occasion. From intricately designed custom cakes and delightful cupcakes to unique berrie cakes and elegant wine-themed desserts.</p>
+
+                                <p>Our bakery is dedicated to turning your special moments into unforgettable memories. Each cake is baked with the finest ingredients, authentic recipes, and genuine love and attention that will impress your guests.</p>
+
+                                <p>Located conveniently in Pokhara, we are committed to serving our community with love and dedication. Whether you're celebrating a birthday, anniversary, or other milestone, our skilled bakers are here to bring your vision to life. You can reach us at 9815095078 or 9805053518 for orders and inquiries, or visit our online cake shop for a seamless shopping experience. Stay connected with us on Instagram @blissfulcakes_pokhara and on Facebook. Or, lly, where we regularly share the latest updates, behind-the-scenes moments, and special promotions for our valued customers. Come join the Blissful experience at Blissful Cakes Pokhara, and let us make your next celebration today!</p>
+
+                                <div class="contact-info">
+                                    <h3>Contact Information</h3>
+                                    <div class="contact-details">
+                                        <p><strong>Phone:</strong> 9815095078 / 9805053518</p>
+                                        <p><strong>Instagram:</strong> @blissfulcakes_pokhara</p>
+                                        <p><strong>Location:</strong> Pokhara, Nepal</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-logo">
+                            <img src="/public/lovable-uploads/9d3d417e-75ad-4e57-999f-fc0e4ca2def0.png" alt="Blissful Cakes Logo" class="logo-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
 </html>
