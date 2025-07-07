@@ -37,14 +37,16 @@ class SupabaseClient {
 
         try {
             const response = await fetch(`${this.url}/rest/v1${path}`, config);
-            const data = await response.json();
-
+            
             if (!response.ok) {
-                throw new Error(data.message || 'Request failed');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
             }
 
+            const data = await response.json();
             return { data, error: null };
         } catch (error) {
+            console.error('Supabase request error:', error);
             return { data: null, error };
         }
     }
@@ -57,8 +59,68 @@ class AuthClient {
         this.currentSession = null;
         this.listeners = [];
         
-        // Check for existing session
-        this.getSession();
+        // Check for existing session on initialization
+        this.initializeSession();
+    }
+
+    async initializeSession() {
+        const token = localStorage.getItem('supabase_token');
+        const userStr = localStorage.getItem('supabase_user');
+
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                this.currentUser = user;
+                this.currentSession = { 
+                    access_token: token, 
+                    user: user,
+                    expires_at: localStorage.getItem('supabase_expires_at')
+                };
+                
+                // Verify token is still valid
+                await this.verifyToken(token);
+                
+                this.notifyListeners('SIGNED_IN', this.currentSession);
+            } catch (error) {
+                console.error('Session initialization error:', error);
+                this.clearSession();
+            }
+        } else {
+            this.notifyListeners('SIGNED_OUT', null);
+        }
+    }
+
+    async verifyToken(token) {
+        try {
+            const response = await fetch(`${this.client.url}/auth/v1/user`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'apikey': this.client.key
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Token verification failed');
+            }
+
+            const userData = await response.json();
+            this.currentUser = userData;
+            localStorage.setItem('supabase_user', JSON.stringify(userData));
+            
+            return true;
+        } catch (error) {
+            console.error('Token verification failed:', error);
+            this.clearSession();
+            return false;
+        }
+    }
+
+    clearSession() {
+        localStorage.removeItem('supabase_token');
+        localStorage.removeItem('supabase_user');
+        localStorage.removeItem('supabase_expires_at');
+        this.currentUser = null;
+        this.currentSession = null;
     }
 
     async signUp({ email, password, options = {} }) {
@@ -79,11 +141,17 @@ class AuthClient {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.msg || data.message || 'Sign up failed');
+                throw new Error(data.msg || data.message || data.error_description || 'Sign up failed');
+            }
+
+            // Handle successful signup
+            if (data.user) {
+                console.log('Signup successful:', data);
             }
 
             return { data, error: null };
         } catch (error) {
+            console.error('Signup error:', error);
             return { data: null, error };
         }
     }
@@ -105,20 +173,29 @@ class AuthClient {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.msg || data.message || 'Sign in failed');
+                const errorMessage = data.error_description || data.msg || data.message || 'Sign in failed';
+                throw new Error(errorMessage);
             }
 
-            // Store session
-            if (data.access_token) {
+            // Store session data
+            if (data.access_token && data.user) {
                 localStorage.setItem('supabase_token', data.access_token);
                 localStorage.setItem('supabase_user', JSON.stringify(data.user));
+                
+                if (data.expires_at) {
+                    localStorage.setItem('supabase_expires_at', data.expires_at);
+                }
+
                 this.currentUser = data.user;
                 this.currentSession = data;
+                
+                console.log('Sign in successful:', data.user);
                 this.notifyListeners('SIGNED_IN', data);
             }
 
             return { data, error: null };
         } catch (error) {
+            console.error('Sign in error:', error);
             return { data: null, error };
         }
     }
@@ -127,42 +204,38 @@ class AuthClient {
         try {
             const token = localStorage.getItem('supabase_token');
             if (token) {
-                await fetch(`${this.client.url}/auth/v1/logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'apikey': this.client.key
-                    }
-                });
+                // Attempt to call logout endpoint
+                try {
+                    await fetch(`${this.client.url}/auth/v1/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'apikey': this.client.key
+                        }
+                    });
+                } catch (logoutError) {
+                    console.warn('Logout endpoint failed, proceeding with local cleanup:', logoutError);
+                }
             }
 
-            localStorage.removeItem('supabase_token');
-            localStorage.removeItem('supabase_user');
-            this.currentUser = null;
-            this.currentSession = null;
+            // Clear local session regardless of logout endpoint success
+            this.clearSession();
             this.notifyListeners('SIGNED_OUT', null);
 
             return { error: null };
         } catch (error) {
+            console.error('Sign out error:', error);
+            // Still clear local session even if there's an error
+            this.clearSession();
+            this.notifyListeners('SIGNED_OUT', null);
             return { error };
         }
     }
 
     async getSession() {
-        const token = localStorage.getItem('supabase_token');
-        const userStr = localStorage.getItem('supabase_user');
-
-        if (token && userStr) {
-            try {
-                this.currentUser = JSON.parse(userStr);
-                this.currentSession = { access_token: token, user: this.currentUser };
-                return { data: { session: this.currentSession }, error: null };
-            } catch (error) {
-                localStorage.removeItem('supabase_token');
-                localStorage.removeItem('supabase_user');
-            }
+        if (this.currentSession) {
+            return { data: { session: this.currentSession }, error: null };
         }
-
         return { data: { session: null }, error: null };
     }
 
@@ -198,7 +271,14 @@ class AuthClient {
     }
 
     notifyListeners(event, session) {
-        this.listeners.forEach(callback => callback(event, session));
+        console.log('Auth state change:', event, session?.user?.email);
+        this.listeners.forEach(callback => {
+            try {
+                callback(event, session);
+            } catch (error) {
+                console.error('Auth listener error:', error);
+            }
+        });
     }
 }
 
@@ -332,3 +412,5 @@ const supabase = new SupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Make it globally available
 window.supabase = supabase;
+
+console.log('🔌 Supabase client initialized');

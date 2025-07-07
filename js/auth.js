@@ -10,8 +10,18 @@ class AuthManager {
     }
 
     async init() {
+        console.log('🔐 Initializing AuthManager...');
+        
+        // Wait for supabase to be available
+        if (!window.supabase) {
+            console.error('Supabase not available');
+            return;
+        }
+
         // Set up auth state listener
         const { data } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session?.user?.email);
+            
             this.session = session;
             this.user = session?.user || null;
             this.loading = false;
@@ -28,12 +38,21 @@ class AuthManager {
         });
 
         // Get initial session
-        const { data: sessionData } = await supabase.auth.getSession();
-        this.session = sessionData.session;
-        this.user = sessionData.session?.user || null;
-        this.loading = false;
-        this.notifyListeners();
-        this.updateUI();
+        try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            this.session = sessionData.session;
+            this.user = sessionData.session?.user || null;
+            this.loading = false;
+            this.notifyListeners();
+            this.updateUI();
+            
+            console.log('Initial auth state:', this.user ? 'Signed in' : 'Signed out');
+        } catch (error) {
+            console.error('Error getting initial session:', error);
+            this.loading = false;
+            this.notifyListeners();
+            this.updateUI();
+        }
     }
 
     onAuthStateChange(callback) {
@@ -50,10 +69,18 @@ class AuthManager {
     }
 
     notifyListeners() {
-        this.listeners.forEach(callback => callback(this.user, this.session, this.loading));
+        this.listeners.forEach(callback => {
+            try {
+                callback(this.user, this.session, this.loading);
+            } catch (error) {
+                console.error('Auth listener error:', error);
+            }
+        });
     }
 
     async signUp(email, password, fullName) {
+        console.log('Attempting signup for:', email);
+        
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
@@ -65,35 +92,58 @@ class AuthManager {
                 },
             });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Signup error:', error);
+                throw error;
+            }
 
+            console.log('Signup successful:', data);
             this.showToast('Account Created!', 'Please check your email to verify your account.', 'success');
             return { error: null };
         } catch (error) {
+            console.error('Signup failed:', error);
             return { error };
         }
     }
 
     async signIn(email, password) {
+        console.log('Attempting signin for:', email);
+        
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Signin error:', error);
+                throw error;
+            }
+
+            console.log('Signin successful:', data);
             return { error: null };
         } catch (error) {
+            console.error('Signin failed:', error);
             return { error };
         }
     }
 
     async signOut() {
+        console.log('Attempting signout...');
+        
         try {
             const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+            if (error) {
+                console.error('Signout error:', error);
+                throw error;
+            }
+            console.log('Signout successful');
         } catch (error) {
             console.error('Sign out error:', error);
+            // Still update UI even if there's an error
+            this.user = null;
+            this.session = null;
+            this.updateUI();
         }
     }
 
@@ -103,7 +153,13 @@ class AuthManager {
         const userNameEl = document.getElementById('user-name');
         const userAvatarEl = document.getElementById('user-avatar-text');
 
+        if (!signinBtn || !userMenu) {
+            console.warn('UI elements not found');
+            return;
+        }
+
         if (this.user) {
+            console.log('Updating UI for signed in user:', this.user.email);
             signinBtn.classList.add('hidden');
             userMenu.classList.remove('hidden');
             
@@ -116,6 +172,7 @@ class AuthManager {
                 userAvatarEl.textContent = name.charAt(0).toUpperCase();
             }
         } else {
+            console.log('Updating UI for signed out user');
             signinBtn.classList.remove('hidden');
             userMenu.classList.add('hidden');
         }
@@ -123,24 +180,32 @@ class AuthManager {
 
     showAuthModal() {
         const modal = document.getElementById('auth-modal');
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
     }
 
     closeAuthModal() {
         const modal = document.getElementById('auth-modal');
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-        this.resetAuthForms();
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            this.resetAuthForms();
+        }
     }
 
     resetAuthForms() {
         // Reset form inputs
-        document.getElementById('signin-email').value = '';
-        document.getElementById('signin-password').value = '';
-        document.getElementById('signup-name').value = '';
-        document.getElementById('signup-email').value = '';
-        document.getElementById('signup-password').value = '';
+        const inputs = [
+            'signin-email', 'signin-password',
+            'signup-name', 'signup-email', 'signup-password'
+        ];
+        
+        inputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) input.value = '';
+        });
         
         // Reset to sign in tab
         this.switchAuthTab('signin');
@@ -151,6 +216,11 @@ class AuthManager {
         const signupTab = document.querySelector('[data-tab="signup"]');
         const signinForm = document.getElementById('signin-form');
         const signupForm = document.getElementById('signup-form');
+
+        if (!signinTab || !signupTab || !signinForm || !signupForm) {
+            console.warn('Auth tab elements not found');
+            return;
+        }
 
         if (tab === 'signin') {
             signinTab.classList.add('active');
@@ -167,6 +237,11 @@ class AuthManager {
 
     showToast(title, message, type = 'info') {
         const container = document.getElementById('toast-container');
+        if (!container) {
+            console.warn('Toast container not found');
+            return;
+        }
+        
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         
@@ -186,16 +261,34 @@ class AuthManager {
         }, 5000);
 
         // Manual close
-        toast.querySelector('.toast-close').addEventListener('click', () => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        });
+        const closeBtn = toast.querySelector('.toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            });
+        }
     }
 }
 
-// Initialize auth manager
-const authManager = new AuthManager();
+// Initialize auth manager when DOM is ready
+let authManager;
 
-// Export for global use
-window.authManager = authManager;
+function initAuthManager() {
+    if (window.supabase) {
+        authManager = new AuthManager();
+        window.authManager = authManager;
+        console.log('✅ AuthManager initialized');
+    } else {
+        console.log('⏳ Waiting for Supabase...');
+        setTimeout(initAuthManager, 100);
+    }
+}
+
+// Start initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuthManager);
+} else {
+    initAuthManager();
+}
